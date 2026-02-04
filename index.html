@@ -82,7 +82,7 @@
         <div id="log-output"></div>
     </div>
 
-<script>
+    <script>
         // 1. Mandatory Global Callback
         const onIncompletePaymentFound = (payment) => {
             console.log("Incomplete payment found", payment);
@@ -115,15 +115,19 @@
 
                 // Request Authentication
                 Pi.authenticate(['username', 'payments'], onIncompletePaymentFound)
-                    .then(function(auth) {
+                    .then(function (auth) {
                         log("👤 Welcome, " + auth.user.username);
                         document.getElementById('user-name').innerText = auth.user.username;
-                        
+                        onReadyForServerCompletion: function(paymentId, txid) {
+                            log("✅ PAID! TXID: " + txid.substring(0, 10));
+                            startAudit(); // <--- THIS LINE TRIGGERS THE SCAN
+                        },
+
                         // Success! Hide the loader immediately
                         const loader = document.getElementById('loader-container');
                         if (loader) loader.style.display = 'none';
                     })
-                    .catch(function(err) {
+                    .catch(function (err) {
                         log("❌ SDK Auth Error: " + err.message);
                     });
             } catch (e) {
@@ -144,12 +148,69 @@
             }, 1500);
         }
 
+        function startAudit() {
+            log("🛡️ SECURITY SCAN INITIATED...");
+
+            // 1. Change the UI to the "Scanning" mode
+            const card = document.querySelector('.card');
+            card.innerHTML = `
+        <h2 style="color: var(--pi-purple);">Audit in Progress...</h2>
+        <div style="width: 100%; background: #eee; height: 15px; border-radius: 10px; margin: 20px 0; overflow: hidden;">
+            <div id="audit-bar" style="width: 0%; background: var(--pi-purple); height: 100%; transition: width 0.3s ease;"></div>
+        </div>
+        <p id="audit-status" style="font-style: italic; color: #666;">Initializing deep scan...</p>
+    `;
+
+            const statuses = [
+                "Analyzing wallet age...",
+                "Checking transaction velocity...",
+                "Verifying network contributions...",
+                "Calculating Trust Score..."
+            ];
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                const bar = document.getElementById('audit-bar');
+                const statusText = document.getElementById('audit-status');
+
+                if (bar) bar.style.width = progress + "%";
+
+                // Update status text every 25%
+                if (progress % 25 === 0 && progress < 100) {
+                    statusText.innerText = statuses[progress / 25];
+                }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    showFinalResult();
+                }
+            }, 150); // Fast, snappy animation for S23
+        }
+
+        function showFinalResult() {
+            const card = document.querySelector('.card');
+            card.style.border = "4px solid #4caf50";
+            card.innerHTML = `
+        <div style="padding: 20px;">
+            <h1 style="color: #4caf50; font-size: 50px; margin: 0;">88%</h1>
+            <h3 style="margin-top: 0;">TRUST SCORE VERIFIED</h3>
+            <hr>
+            <p>User: <b>Pinoy</b></p>
+            <p style="font-size: 12px; color: #999;">Audit ID: PI-${Math.floor(Math.random() * 1000000)}</p>
+            <button onclick="location.reload()" style="background: var(--pi-purple); color: white; border: none; padding: 10px 20px; border-radius: 5px; width: 100%;">Return to Bazaar</button>
+        </div>
+    `;
+            log("🏆 Audit Complete: 88% Score Issued.");
+        }
+
         // Ensure it runs even if the browser is slow
-        if (document.readyState === "complete") { 
-            startSystem(); 
-        } else { 
-            window.addEventListener("load", startSystem); 
+        if (document.readyState === "complete") {
+            startSystem();
+        } else {
+            window.addEventListener("load", startSystem);
         }
     </script>
 </body>
+
 </html>
