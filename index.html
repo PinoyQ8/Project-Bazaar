@@ -1,33 +1,76 @@
-<script>
-    // 1. Initialize
-    log("System: Initializing Pi SDK...");
-    Pi.init({ version: "2.0" });
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust Bazaar - Emergency Reset</title>
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; background-color: #f0f0f0; }
+        #debug-window { 
+            background: #222; color: #0f0; padding: 15px; text-align: left; 
+            font-family: monospace; font-size: 12px; border-radius: 8px; 
+            min-height: 250px; overflow-y: auto; margin-top: 20px;
+        }
+        button { 
+            width: 100%; padding: 20px; font-size: 18px; font-weight: bold;
+            background-color: #fca900; border: none; border-radius: 10px; cursor: pointer;
+        }
+        .status-ok { color: #0f0; }
+        .status-err { color: #f00; }
+    </style>
+</head>
+<body>
 
-    // 2. The Login Function
-    async function tryLogin() {
-        log("👉 Button Clicked. Waiting 1 second for SDK safety...");
-        
-        // Small delay to ensure the bridge between GitHub and Pi Browser is solid
-        setTimeout(async () => {
-            log("🚀 Calling Pi.authenticate now...");
-            
+    <h2>🛠️ Diagnostic Mode</h2>
+    <p>If you see this, the HTML is working.</p>
+    
+    <button id="login-btn">TAP TO AUTHENTICATE</button>
+
+    <div id="debug-window">
+        <div>[SYSTEM]: Initializing...</div>
+    </div>
+
+    <script>
+        const debug = document.getElementById('debug-window');
+        function log(msg, color = "#0f0") {
+            debug.innerHTML += `<div style="color: ${color}">> ${msg}</div>`;
+            console.log(msg);
+        }
+
+        // 1. Check if SDK actually loaded
+        window.onload = function() {
+            log("Window loaded.");
+            if (typeof Pi === 'undefined') {
+                log("FATAL: Pi SDK not found! Check your internet or script tag.", "#f00");
+            } else {
+                log("Pi SDK detected successfully.");
+                try {
+                    // Try to init
+                    Pi.init({ version: "2.0" });
+                    log("Pi.init() executed.");
+                } catch (e) {
+                    log("Pi.init() Error: " + e.message, "#f00");
+                }
+            }
+        };
+
+        // 2. Login Logic
+        document.getElementById('login-btn').onclick = async function() {
+            log("Auth button tapped...");
             try {
+                log("Requesting Pi.authenticate...");
                 const auth = await Pi.authenticate(['username', 'payments'], function(payment) {
-                    log("Payment Check: " + payment.identifier);
+                    log("Incomplete payment check...");
                     return true;
                 });
-                
-                log("✅ LOGIN SUCCESS! Welcome " + auth.user.username);
-                alert("Authenticated as " + auth.user.username);
-                
+                log("SUCCESS! User: " + auth.user.username);
+                alert("Hello " + auth.user.username);
             } catch (err) {
-                // If it fails, it MUST show an error here. 
-                // If nothing shows, the Pi Browser is blocking the request entirely.
-                log("🛑 AUTH FAILED: " + JSON.stringify(err));
-                alert("Error: " + err);
+                log("AUTH ERROR: " + JSON.stringify(err), "#f00");
+                alert("Auth Error: " + err);
             }
-        }, 1000);
-    }
-
-    document.getElementById('btn-login').onclick = tryLogin;
-</script>
+        };
+    </script>
+</body>
+</html>
