@@ -1,89 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <style>
-    /* Full-screen purple curtain */
-    #loader-container {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100vw; height: 100vh;
-        background: #673ab7; 
-        display: flex; flex-direction: column;
-        justify-content: center; align-items: center;
-        z-index: 9999; /* Ensures it stays on top of everything */
-        transition: opacity 0.5s ease;
-    }
-    /* The spinning circle */
-    .spinner {
-        width: 40px; height: 40px;
-        border: 4px solid rgba(255,255,255,0.3);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { color: white; margin-top: 15px; font-family: sans-serif; font-size: 14px; }
-</style>
+    <title>Trust Bazaar</title>
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <style>
+        :root { --pi-purple: #673ab7; --pi-gold: #ffc107; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f7f6; margin: 0; color: #333; overflow-x: hidden; }
+        
+        /* 1. LOADER BOX */
+        #loader-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--pi-purple); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
+        .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* 2. MAIN UI */
+        .container { padding: 20px; max-width: 500px; margin: 0 auto; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-top: 20px; }
+        
+        /* 3. AUDIT ANIMATION */
+        #audit-box { display: none; }
+        .progress-bar { width: 100%; background: #eee; height: 10px; border-radius: 5px; margin: 20px 0; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: var(--pi-purple); transition: width 3s ease-in-out; }
+        
+        /* 4. BUTTONS */
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
+        .btn-purple { background: var(--pi-purple); color: white; }
+        .btn:active { transform: scale(0.98); }
+    </style>
 </head>
-<body style="background-color: #673ab7; color: white; text-align: center; font-family: sans-serif; margin: 0; padding-top: 50px;">
+<body>
+
     <div id="loader-container">
-    <div class="spinner"></div>
-    <div class="loading-text">Trust Bazaar is Loading...</div>
-</div>
-    <div id="loading-screen">
-        <h1>Trust Bazaar</h1>
-        <p id="status-text">Connecting to Pi Network...</p>
+        <div class="spinner"></div>
+        <div style="color:white; margin-top:20px; font-weight:bold;">Trust Bazaar Connecting...</div>
     </div>
 
-    <button id="login-btn" style="display:none; padding: 20px 40px; font-size: 20px; border-radius: 50px; border: none; background: white; color: #673ab7; font-weight: bold;">
-        LOGIN TO PI
-    </button>
+    <div class="container">
+        <div id="login-section">
+            <div class="card" style="text-align: center;">
+                <h1 style="color: var(--pi-purple);">Trust Bazaar</h1>
+                <p>Verify your reputation on the Pi Network.</p>
+                <button class="btn btn-purple" onclick="login()">LOGIN WITH PI</button>
+            </div>
+        </div>
+
+        <div id="dashboard-section" style="display: none;">
+            <div class="card">
+                <h3>Welcome, <span id="user-name" style="color: var(--pi-purple);">Pioneer</span></h3>
+                <div id="score-display">
+                    <p>Current Trust Level:</p>
+                    <h1 style="font-size: 60px; margin: 10px 0; color: #4caf50;">??%</h1>
+                    <button class="btn btn-purple" onclick="startAudit()">GET FULL AUDIT (1 PI)</button>
+                </div>
+
+                <div id="audit-box">
+                    <p id="audit-status">Analyzing Blockchain Data...</p>
+                    <div class="progress-bar"><div class="progress-fill" id="fill"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-    // The curtain lifter
-    function hideLoader() {
+        // Define UI Elements
         const loader = document.getElementById('loader-container');
-        if(loader) {
+        const loginSec = document.getElementById('login-section');
+        const dashSec = document.getElementById('dashboard-section');
+
+        function hideLoader() {
             loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
         }
-    }
 
-    window.onload = function() {
-        const status = document.getElementById('status-msg');
+        // Initialize Pi SDK
+        window.onload = function() {
+            try {
+                Pi.init({ version: "2.0" });
+                // We don't hide the loader yet; we wait for the user to click login
+                // or for an auto-login check.
+                hideLoader(); 
+            } catch (e) {
+                console.error(e);
+                alert("Please open this in the Pi Browser.");
+            }
+        };
 
-        // Set a 5-second "Rescue Timer"
-        const rescueTimer = setTimeout(() => {
-            status.innerText = "Connection taking too long. Tap to force start.";
-            hideLoader(); 
-        }, 5000);
-
-        try {
-            // Force the SDK to wake up
-            Pi.init({ version: "2.0" });
-            
-            Pi.authenticate(['username'], function(p){})
-                .then(function(auth) {
-                    clearTimeout(rescueTimer); // Stop the timer on success
-                    status.innerText = "Connected!";
-                    hideLoader();
-                    console.log("Welcome " + auth.user.username);
-                })
-                .catch(function(err) {
-                    clearTimeout(rescueTimer);
-                    status.innerText = "Auth Error: " + err.message;
-                    hideLoader();
-                });
-        } catch (err) {
-            status.innerText = "Init Error: " + err.message;
-            hideLoader();
+        function login() {
+            Pi.authenticate(['username', 'payments'], function(payment) {
+                // Handle incomplete payments if necessary
+            }).then(function(auth) {
+                document.getElementById('user-name').innerText = auth.user.username;
+                loginSec.style.display = 'none';
+                dashSec.style.display = 'block';
+                window.navigator.vibrate(100); // Haptic feedback
+            }).catch(function(err) {
+                alert("Login failed: " + err.message);
+            });
         }
-    };
-</script>
+
+        function startAudit() {
+            // In a real app, you would call Pi.createPayment here first.
+            // For now, let's show the cool animation.
+            document.getElementById('score-display').style.display = 'none';
+            document.getElementById('audit-box').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('fill').style.width = '100%';
+                setTimeout(() => {
+                    alert("Audit Complete! Your Trust Score is 85%");
+                    location.reload(); // Reset for demo
+                }, 3500);
+            }, 100);
+        }
+    </script>
 </body>
 </html>
-
-
