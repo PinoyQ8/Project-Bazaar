@@ -1,158 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Trust Bazaar v1.1</title>
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <style>
-        :root {
-            --pi-purple: #673ab7;
-            --pi-gold: #ffc107;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            color: #333;
-            overflow-x: hidden;
-            padding-bottom: 140px;
-        }
-
+        :root { --pi-purple: #673ab7; --pi-gold: #ffc107; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f7f6; margin: 0; color: #333; overflow-x: hidden; padding-bottom: 140px; }
+        
         /* 1. LOADER BOX */
-        #loader-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--pi-purple);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.2);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
+        #loader-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--pi-purple); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
+        .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
         /* 2. MAIN UI */
-        .container {
-            padding: 20px;
-            max-width: 500px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            margin-top: 20px;
-            text-align: left;
-        }
-
+        .container { padding: 20px; max-width: 500px; margin: 0 auto; text-align: center; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-top: 20px; text-align: left; }
+        
         /* 3. AUDIT ANIMATION */
-        #audit-box {
-            display: none;
-        }
-
-        .progress-bar {
-            width: 100%;
-            background: #eee;
-            height: 10px;
-            border-radius: 5px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            width: 0%;
-            height: 100%;
-            background: var(--pi-purple);
-            transition: width 0.2s linear;
-        }
-
+        #audit-box { display: none; }
+        .progress-bar { width: 100%; background: #eee; height: 10px; border-radius: 5px; margin: 20px 0; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: var(--pi-purple); transition: width 0.2s linear; }
+        
         /* 4. BUTTONS */
-        .btn {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.1s;
-            margin-top: 10px;
-        }
-
-        .btn-purple {
-            background: var(--pi-purple);
-            color: white;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        .result-card {
-            display: none;
-            animation: slideUp 0.6s ease-out;
-        }
-
-        .badge-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .badge {
-            background: #f0ebf7;
-            padding: 10px;
-            border-radius: 10px;
-            font-size: 12px;
-            color: var(--pi-purple);
-            font-weight: bold;
-            text-align: center;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; transition: transform 0.1s; margin-top: 10px; }
+        .btn-purple { background: var(--pi-purple); color: white; }
+        .btn:active { transform: scale(0.98); }
+        
+        /* 5. RESULT DASHBOARD */
+        .result-card { display: none; animation: slideUp 0.6s ease-out; }
+        .badge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .badge { background: #f0ebf7; padding: 10px; border-radius: 10px; font-size: 12px; color: var(--pi-purple); font-weight: bold; text-align: center; }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-
 <body>
 
     <div id="loader-container">
         <div class="spinner"></div>
-        <p style="color: white; margin-top: 15px; font-weight: bold;">Initializing Trust Protocol...</p>
+        <p style="color: white; margin-top: 15px; font-weight: bold;">Trust Protocol Initializing...</p>
     </div>
 
     <div class="container">
@@ -161,150 +49,88 @@
         <div id="dashboard-section">
             <div class="card" id="score-display">
                 <h3>Welcome, <span id="user-name">Pioneer</span></h3>
-                <p>Ready to verify your Trust Protocol score?</p>
+                <p>Verify your Trust Protocol to unlock bazaar privileges.</p>
+                
                 <button class="btn btn-purple" onclick="login()">1. Connect Pi Wallet</button>
-                <button class="btn btn-purple" style="background:#4caf50;" onclick="requestTrustPayment()">2. Start
-                    Trust Audit (1 Pi)</button>
+                
+                <button class="btn btn-purple" style="background:#4caf50;" onclick="requestTrustPayment()">
+                    2. Start Audit (1 Pi)
+                </button>
             </div>
 
             <div class="card" id="audit-box">
-                <h3 id="audit-status">Initializing Audit...</h3>
+                <h3 id="audit-status">Processing Payment...</h3>
                 <div class="progress-bar">
                     <div id="fill" class="progress-fill"></div>
                 </div>
-                <p style="font-size: 12px; color: #666;">Scanning blockchain reputation...</p>
+                <p id="audit-subtext" style="font-size: 12px; color: #666;">Waiting for Blockchain verification...</p>
             </div>
         </div>
     </div>
 
-    <div id="debug-box"
-        style="background: #1a1a1a; color: #00ff00; font-family: monospace; font-size: 11px; padding: 10px; height: 120px; overflow-y: auto; border-top: 3px solid #673ab7; position: fixed; bottom: 0; width: 100%; z-index: 10000; opacity: 0.9;">
-        <div
-            style="display: flex; justify-content: space-between; border-bottom: 1px solid #444; margin-bottom: 5px; padding-bottom: 3px;">
+    <div id="debug-box" style="background: #1a1a1a; color: #00ff00; font-family: monospace; font-size: 11px; padding: 10px; height: 120px; overflow-y: auto; border-top: 3px solid #673ab7; position: fixed; bottom: 0; width: 100%; z-index: 10000; opacity: 0.9;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #444; margin-bottom: 5px; padding-bottom: 3px;">
             <b style="color:white">TRUST BAZAAR DEBUGGER</b>
-            <button onclick="document.getElementById('debug-box').style.display='none'"
-                style="background:red; color:white; border:none; border-radius:3px; padding: 0 5px;">HIDE</button>
+            <button onclick="document.getElementById('debug-box').style.display='none'" style="background:red; color:white; border:none; border-radius:3px; padding: 0 5px;">HIDE</button>
         </div>
         <div id="log-output">Ready...</div>
     </div>
 
-    <script>
-        function log(msg) {
-            const output = document.getElementById('log-output');
-            const now = new Date();
-            const time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
-            output.innerHTML += `<div>[${time}] ${msg}</div>`;
-            output.scrollTop = output.scrollHeight;
+<script>
+    // --- 1. SYSTEM LOGGING ---
+    function log(msg) {
+        const output = document.getElementById('log-output');
+        const now = new Date();
+        const time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+        output.innerHTML += `<div>[${time}] ${msg}</div>`;
+        output.scrollTop = output.scrollHeight; 
+    }
+
+    window.onerror = function(m, s, l) { log(`❌ ERR: ${m} at line ${l}`); };
+
+    // --- 2. SDK INITIALIZATION ---
+    window.onload = function() {
+        log("Checking Pi SDK connection...");
+        try {
+            Pi.init({ version: "2.0" });
+            log("✅ SDK Initialized.");
+            setTimeout(() => {
+                const loader = document.getElementById('loader-container');
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }, 1000);
+        } catch (e) {
+            log("❌ SDK Failed: " + e.message);
         }
+    };
 
-        window.onerror = function (m, s, l) { log(`❌ ERR: ${m} at line ${l}`); };
+    // --- 3. AUTHENTICATION ---
+    function login() {
+        log("Authenticating user...");
+        Pi.authenticate(['username', 'payments'], function(p){
+            log("Incomplete payment check.");
+        }).then(function(auth) {
+            log(`👋 Hello, ${auth.user.username}`);
+            document.getElementById('user-name').innerText = auth.user.username;
+        }).catch(function(err) {
+            log("❌ Auth Error: " + err.message);
+        });
+    }
 
-        window.onload = function () {
-            log("Checking Pi SDK connection...");
-            try {
-                Pi.init({ version: "2.0" });
-                log("✅ SDK Initialized.");
-                setTimeout(() => {
-                    const loader = document.getElementById('loader-container');
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.style.display = 'none', 500);
-                }, 1000);
-            } catch (e) {
-                log("❌ SDK Failed: " + e.message);
-            }
+    // --- 4. PI PAYMENT ENGINE (The MVP Engine) ---
+    function requestTrustPayment() {
+        log("Initiating 1 Pi Trust Fee...");
+
+        const paymentData = {
+            amount: 1.0,
+            memo: "Trust Protocol Audit Fee - Trust Bazaar",
+            metadata: { audit_type: "Standard_85_Percent" },
         };
 
-        function login() {
-            log("Authenticating user...");
-            Pi.authenticate(['username', 'payments'], function (p) {
-                log("Incomplete payment check.");
-            }).then(function (auth) {
-                log(`👋 Hello, ${auth.user.username}`);
-                document.getElementById('user-name').innerText = auth.user.username;
-            }).catch(function (err) {
-                log("❌ Auth Error: " + err.message);
-            });
-        }
-
-        function startAudit() {
-            log("Starting Trust Audit...");
-            document.getElementById('score-display').style.display = 'none';
-            document.getElementById('audit-box').style.display = 'block';
-
-            let progress = 0;
-            const fill = document.getElementById('fill');
-            const status = document.getElementById('audit-status');
-
-            const interval = setInterval(() => {
-                progress += 2;
-                fill.style.width = progress + "%";
-
-                if (progress === 30) status.innerText = "Checking Wallet Age...";
-                if (progress === 60) status.innerText = "Verifying Security Circle...";
-                if (progress === 90) status.innerText = "Finalizing Reputation Score...";
-
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    setTimeout(() => showFinalResult(), 500);
-                }
-            }, 50);
-        }
-
-        function showFinalResult() {
-            log("Audit Complete! Displaying 85% Score.");
-            document.getElementById('audit-box').style.display = 'none';
-
-            const dashboard = document.getElementById('dashboard-section');
-            const username = document.getElementById('user-name').innerText;
-
-            dashboard.innerHTML = `
-            <div class="card result-card" style="display:block; border: 2px solid #4caf50;">
-                <div style="background: #4caf50; color: white; padding: 5px 15px; border-radius: 20px; display: inline-block; font-size: 12px; margin-bottom: 10px;">VERIFIED AUDIT</div>
-                <h2 style="margin:0;">Trust Score: <span style="color:#4caf50;">85%</span></h2>
-                <p style="font-size: 14px; color: #666;">Analysis complete for <b>${username}</b></p>
-                
-                <div class="badge-grid">
-                    <div class="badge">✅ KYC Verified</div>
-                    <div class="badge">🛡️ Secure Circle</div>
-                    <div class="badge">⏳ 2+ Year Pioneer</div>
-                    <div class="badge">💎 Node Runner</div>
-                </div>
-
-                <button class="btn btn-purple" style="margin-top: 20px;" onclick="location.reload()">Back to Bazaar</button>
-            </div>
-        `;
-            if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
-
-            function requestTrustPayment() {
-                log("Initiating 1 Pi Trust Fee...");
-
-                const paymentData = {
-                    amount: 1.0,
-                    memo: "Trust Protocol Audit Fee - Trust Bazaar",
-                    metadata: { audit_type: "Standard_85_Percent" },
-                };
-
-                const callbacks = {
-                    onReadyForServerApproval: function (paymentId) {
-                        log("✅ Payment ID created: " + paymentId);
-                        // This tells Pi we approve of this payment starting
-                        Pi.createPayment(paymentData, this);
-                    },
-                    onReadyForServerCompletion: function (paymentId, txid) {
-                        log("🚀 Transaction Signed! TXID: " + txid);
-                        startAudit(); // This starts your 85% animation only AFTER they pay!
-                    },
-                    onCancel: function (paymentId) {
-                        log("❌ Payment Cancelled by user.");
-                    },
-                    onError: function (error, payment) {
-                        log("❌ Payment Error: " + error.message);
-                    }
-                };
-
-                Pi.createPayment(paymentData, callbacks);
-            }
-    </script>
-</body>
-
-</html>
+        const callbacks = {
+            onReadyForServerApproval: function(paymentId) {
+                log("✅ Payment Created. ID: " + paymentId);
+            },
+            onReadyForServerCompletion: function(paymentId, txid) {
+                log("🚀 Payment Success! TXID: " + txid);
+                startAudit(); // Only
