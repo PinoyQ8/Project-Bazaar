@@ -90,106 +90,79 @@
         }
 
         window.onload = function () {
-            log("📡 Starting System...");
+            log("📡 API Handshake Starting...");
 
-            // 1. Force hide the purple loader
+            // 1. FAILSAFE: Remove the curtain after 5 seconds
             setTimeout(() => {
                 const loader = document.getElementById('loader-container');
-                if (loader) loader.style.display = 'none';
-                log("⚠️ Failsafe active.");
-            }, 3000);
-
-            function requestTrustPayment() {
-                log("💎 Opening Wallet Interface...");
-
-                // This data must match your Developer Portal settings exactly
-                const paymentData = {
-                    amount: 1.0,
-                    memo: "Trust Protocol Security Deposit",
-                    metadata: {
-                        orderId: "audit_" + Date.now(),
-                        dev_id: "pinoyq8"
-                    },
-                };
-
-                const callbacks = {
-                    onReadyForServerApproval: function (paymentId) {
-                        log("📡 Payment ID Created: " + paymentId);
-                        log("⏳ Waiting for Server Approval...");
-                        // In Sandbox, the Pi App handles the approval 'faking'
-                    },
-                    onReadyForServerCompletion: function (paymentId, txid) {
-                        log("✅ PAYMENT SUCCESS!");
-                        log("TXID: " + txid.substring(0, 15) + "...");
-                        startAudit(); // This triggers your 85% animation
-                    },
-                    onCancel: function (paymentId) {
-                        log("⚠️ Wallet Closed by User.");
-                    },
-                    onError: function (error, payment) {
-                        log("❌ Wallet Error: " + error.message);
-                    }
-                };
-
-                try {
-                    // This is the command that makes the S23 show the payment screen
-                    Pi.createPayment(paymentData, callbacks);
-                } catch (e) {
-                    log("❌ SDK Payment Failure: " + e.message);
+                if (loader && loader.style.display !== 'none') {
+                    loader.style.display = 'none';
+                    log("⚠️ SDK bypass triggered.");
                 }
+            }, 5000);
 
-            let userAccountData = null; // Global variable to store Pi data
+            // 2. Mandatory Callback for API Payments
+            const onIncompletePaymentFound = (payment) => {
+                log("🔍 API: Found incomplete transaction: " + payment.identifier);
+                // This line tells the Pi Servers you are handling the payment
+            };
 
-            function login() {
-                log("🚀 Requesting Auth & Roles...");
+            try {
+                // Initialize the SDK
+                Pi.init({ version: "2.0" });
+                log("✅ SDK Initialized.");
 
-                Pi.authenticate(['username', 'payments'], function (payment) {
-                    log("Checking for incomplete payments...");
-                }).then(function (auth) {
-                    log("✅ CONNECTED: " + auth.user.username);
-                    userAccountData = auth.user; // Store the data (username, uid, etc.)
+                // IMPORTANT: Authenticate immediately with 'payments' scope
+                // This is what activates your API Key on the S23
+                Pi.authenticate(['username', 'payments'], onIncompletePaymentFound)
+                    .then(function (auth) {
+                        log("👤 API Verified: " + auth.user.username);
+                        document.getElementById('user-name').innerText = auth.user.username;
+                    })
+                    .catch(function (err) {
+                        log("❌ API Auth Error: " + err.message);
+                    });
 
-                    document.getElementById('user-name').innerText = auth.user.username;
-                    document.getElementById('user-name').style.color = "#4caf50";
-
-                }).catch(function (err) {
-                    log("❌ AUTH ERROR: " + err.message);
-                });
+            } catch (e) {
+                log("❌ SDK Fatal Error: " + e.message);
             }
-            function checkWalletEligibility() {
-                log("🔍 Verifying Wallet Eligibility...");
+        };
+            }
 
-                // We check if the user is authenticated first
-                if (document.getElementById('user-name').innerText === "Pioneer") {
-                    log("❌ Error: Please connect your wallet first!");
-                    return;
+        function checkWalletEligibility() {
+            log("🔍 Verifying Wallet Eligibility...");
+
+            // We check if the user is authenticated first
+            if (document.getElementById('user-name').innerText === "Pioneer") {
+                log("❌ Error: Please connect your wallet first!");
+                return;
+            }
+
+            log("📡 Pinging Pi Blockchain for status...");
+
+            // In a real scenario, you'd call your backend here. 
+            // For the MVP, we simulate a 'Gas Check'
+            setTimeout(() => {
+                const hasBalance = true; // Simulated check
+                if (hasBalance) {
+                    log("✅ Balance Confirmed: > 1 Pi available.");
+                    log("🛡️ Security Circle: Verified.");
+                    document.getElementById('audit-status').innerText = "Wallet Eligible for 85% Score";
+                    document.getElementById('audit-status').style.color = "#4caf50";
+                } else {
+                    log("❌ Insufficient Pi for Trust Deposit.");
                 }
+            }, 1500);
+        }
+        function showFinalResult() {
+            log("📊 Generating Verified Certificate...");
+            document.getElementById('audit-box').style.display = 'none';
 
-                log("📡 Pinging Pi Blockchain for status...");
+            const dashboard = document.getElementById('dashboard-section');
+            const username = userAccountData ? userAccountData.username : "Pioneer";
 
-                // In a real scenario, you'd call your backend here. 
-                // For the MVP, we simulate a 'Gas Check'
-                setTimeout(() => {
-                    const hasBalance = true; // Simulated check
-                    if (hasBalance) {
-                        log("✅ Balance Confirmed: > 1 Pi available.");
-                        log("🛡️ Security Circle: Verified.");
-                        document.getElementById('audit-status').innerText = "Wallet Eligible for 85% Score";
-                        document.getElementById('audit-status').style.color = "#4caf50";
-                    } else {
-                        log("❌ Insufficient Pi for Trust Deposit.");
-                    }
-                }, 1500);
-            }
-            function showFinalResult() {
-                log("📊 Generating Verified Certificate...");
-                document.getElementById('audit-box').style.display = 'none';
-
-                const dashboard = document.getElementById('dashboard-section');
-                const username = userAccountData ? userAccountData.username : "Pioneer";
-
-                // The "Certificate" UI
-                dashboard.innerHTML = `
+            // The "Certificate" UI
+            dashboard.innerHTML = `
         <div class="card certificate-card" style="border: 4px double #4caf50; padding: 30px; position: relative; overflow: hidden;">
             <div style="position: absolute; top: -20px; right: -20px; font-size: 100px; color: rgba(76, 175, 80, 0.1); transform: rotate(-20deg);">🛡️</div>
             
@@ -214,9 +187,9 @@
         </div>
     `;
 
-                // S23 haptic feedback for success
-                if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
-            }
+            // S23 haptic feedback for success
+            if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
+        }
     </script>
 </body>
 
