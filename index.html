@@ -83,121 +83,60 @@
     </div>
 
     <script>
-        function log(msg) {
-            const output = document.getElementById('log-output');
-            output.innerHTML += `<div>> ${msg}</div>`;
-            output.scrollTop = output.scrollHeight;
-        }
+        // 1. Define the mandatory callback FIRST (Global Scope)
+        const onIncompletePaymentFound = (payment) => {
+            console.log("Found incomplete payment", payment);
+        };
 
-        window.onload = function () {
-            log("📡 API Handshake Starting...");
-
-            // 1. FAILSAFE: Remove the curtain after 6 seconds if SDK hangs
-            setTimeout(() => {
-                const loader = document.getElementById('loader-container');
-                if (loader && loader.style.display !== 'none') {
-                    loader.style.display = 'none';
-                    log("⚠️ SDK took too long. Forced entry.");
-                }
-            }, 6000);
-
-            // 2. MANDATORY: The 'Incomplete Payment' Callback
-            // Without this, Pi.init will hang forever!
-            const onIncompletePaymentFound = (payment) => {
-                log("🔍 API: Found stuck transaction: " + payment.identifier);
-                // This is where your API Key works behind the scenes
+        // 2. The Main Bootstrapper
+        function bootPi() {
+            const logOutput = document.getElementById('log-output');
+            const log = (msg) => {
+                logOutput.innerHTML += `<div>> ${msg}</div>`;
+                logOutput.scrollTop = logOutput.scrollHeight;
             };
 
+            log("📡 Force-starting SDK...");
+
+            // FAILSAFE: Kill the spinner after 5 seconds no matter what
+            setTimeout(() => {
+                const loader = document.getElementById('loader-container');
+                if (loader) {
+                    loader.style.display = 'none';
+                    log("⚠️ Failsafe: Loader bypassed.");
+                }
+            }, 5000);
+
             try {
-                log("🔗 Initializing Pi SDK...");
+                if (typeof Pi === 'undefined') {
+                    log("❌ ERROR: Pi SDK Script not found!");
+                    return;
+                }
 
-                // Start the SDK
+                // INITIALIZE
                 Pi.init({ version: "2.0" });
-                log("✅ SDK Signal Received.");
+                log("✅ SDK Initialized.");
 
-                // 3. IMMEDIATE AUTH: This "wakes up" the Sandbox and S23
+                // AUTHENTICATE (This wakes up the Sandbox/S23)
                 Pi.authenticate(['username', 'payments'], onIncompletePaymentFound)
                     .then(function (auth) {
-                        log("👤 Welcome, " + auth.user.username);
+                        log("👤 Hello " + auth.user.username);
                         document.getElementById('user-name').innerText = auth.user.username;
-
-                        // Hide loader once authenticated
-                        const loader = document.getElementById('loader-container');
-                        if (loader) loader.style.display = 'none';
                     })
                     .catch(function (err) {
-                        log("❌ API Auth Error: " + err.message);
-                        // Even if auth fails, we hide the loader to see the error
-                        document.getElementById('loader-container').style.display = 'none';
+                        log("❌ Auth Error: " + err.message);
                     });
 
             } catch (e) {
-                log("❌ SDK Fatal Error: " + e.message);
-                document.getElementById('loader-container').style.display = 'none';
+                log("❌ Fatal: " + e.message);
             }
-        };
-            }
-
-        function checkWalletEligibility() {
-            log("🔍 Verifying Wallet Eligibility...");
-
-            // We check if the user is authenticated first
-            if (document.getElementById('user-name').innerText === "Pioneer") {
-                log("❌ Error: Please connect your wallet first!");
-                return;
-            }
-
-            log("📡 Pinging Pi Blockchain for status...");
-
-            // In a real scenario, you'd call your backend here. 
-            // For the MVP, we simulate a 'Gas Check'
-            setTimeout(() => {
-                const hasBalance = true; // Simulated check
-                if (hasBalance) {
-                    log("✅ Balance Confirmed: > 1 Pi available.");
-                    log("🛡️ Security Circle: Verified.");
-                    document.getElementById('audit-status').innerText = "Wallet Eligible for 85% Score";
-                    document.getElementById('audit-status').style.color = "#4caf50";
-                } else {
-                    log("❌ Insufficient Pi for Trust Deposit.");
-                }
-            }, 1500);
         }
-        function showFinalResult() {
-            log("📊 Generating Verified Certificate...");
-            document.getElementById('audit-box').style.display = 'none';
 
-            const dashboard = document.getElementById('dashboard-section');
-            const username = userAccountData ? userAccountData.username : "Pioneer";
-
-            // The "Certificate" UI
-            dashboard.innerHTML = `
-        <div class="card certificate-card" style="border: 4px double #4caf50; padding: 30px; position: relative; overflow: hidden;">
-            <div style="position: absolute; top: -20px; right: -20px; font-size: 100px; color: rgba(76, 175, 80, 0.1); transform: rotate(-20deg);">🛡️</div>
-            
-            <h3 style="color: #4caf50; text-transform: uppercase; letter-spacing: 2px;">Trust Protocol Verified</h3>
-            <hr style="border: 0; border-top: 1px solid #eee;">
-            
-            <p style="margin-top: 20px;">This certifies that</p>
-            <h2 style="color: #333; margin: 10px 0;">${username}</h2>
-            <p>has completed the <b>Level 1 Reputation Audit</b></p>
-            
-            <div style="margin: 30px 0;">
-                <div style="font-size: 14px; color: #666;">FINAL TRUST SCORE</div>
-                <div style="font-size: 50px; font-weight: bold; color: #4caf50;">88%</div>
-            </div>
-
-            <div style="display: flex; justify-content: space-around; font-size: 12px; color: #777;">
-                <div>ID: ${Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
-                <div>DATE: ${new Date().toLocaleDateString()}</div>
-            </div>
-
-            <button class="btn" style="margin-top: 30px; background: #673ab7; color: white;" onclick="location.reload()">Return to Bazaar</button>
-        </div>
-    `;
-
-            // S23 haptic feedback for success
-            if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
+        // 3. Ensure the script runs after everything is loaded
+        if (document.readyState === 'complete') {
+            bootPi();
+        } else {
+            window.addEventListener('load', bootPi);
         }
     </script>
 </body>
