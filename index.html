@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Trust Bazaar</title>
+    <h1 style="color: var(--pi-purple);">Trust Bazaar v1.1</h1>
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <style>
         :root { --pi-purple: #673ab7; --pi-gold: #ffc107; }
@@ -53,36 +53,56 @@
 </head>
 <body>
 
-    <div id="loader-container">
-        <div class="spinner"></div>
-        <div style="color:white; margin-top:20px; font-weight:bold;">Trust Bazaar Connecting...</div>
+    <div id="debug-box" style="background: #1a1a1a; color: #00ff00; font-family: monospace; font-size: 11px; padding: 10px; height: 120px; overflow-y: auto; border-top: 3px solid #673ab7; position: fixed; bottom: 0; width: 100%; z-index: 10000; opacity: 0.9;">
+    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #444; margin-bottom: 5px; padding-bottom: 3px;">
+        <b style="color:white">TRUST BAZAAR DEBUGGER</b>
+        <button onclick="document.getElementById('debug-box').style.display='none'" style="background:red; color:white; border:none; border-radius:3px; padding: 0 5px;">HIDE</button>
     </div>
+    <div id="log-output">Ready...</div>
+</div>
 
-    <div class="container">
-        <div id="login-section">
-            <div class="card" style="text-align: center;">
-                <h1 style="color: var(--pi-purple);">Trust Bazaar</h1>
-                <p>Verify your reputation on the Pi Network.</p>
-                <button class="btn btn-purple" onclick="login()">LOGIN WITH PI</button>
-            </div>
-        </div>
+<script>
+    // The "Logger" function
+    function log(msg) {
+        const output = document.getElementById('log-output');
+        const now = new Date();
+        const time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+        output.innerHTML += `<div>[${time}] ${msg}</div>`;
+        output.scrollTop = output.scrollHeight; 
+        console.log(msg);
+    }
 
-        <div id="dashboard-section" style="display: none;">
-            <div class="card">
-                <h3>Welcome, <span id="user-name" style="color: var(--pi-purple);">Pioneer</span></h3>
-                <div id="score-display">
-                    <p>Current Trust Level:</p>
-                    <h1 style="font-size: 60px; margin: 10px 0; color: #4caf50;">??%</h1>
-                    <button class="btn btn-purple" onclick="startAudit()">GET FULL AUDIT (1 PI)</button>
-                </div>
+    // Global error catcher (tells you if code crashes on phone)
+    window.onerror = function(m, s, l) { log(`❌ ERR: ${m} at line ${l}`); };
 
-                <div id="audit-box">
-                    <p id="audit-status">Analyzing Blockchain Data...</p>
-                    <div class="progress-bar"><div class="progress-fill" id="fill"></div></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    window.onload = function() {
+        log("Checking Pi SDK connection...");
+        try {
+            Pi.init({ version: "2.0" });
+            log("✅ SDK Initialized.");
+            // Hide the purple curtain
+            const loader = document.getElementById('loader-container');
+            if(loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }
+        } catch (e) {
+            log("❌ SDK Failed: " + e.message);
+        }
+    };
+
+    function login() {
+        log("Authenticating user...");
+        Pi.authenticate(['username', 'payments'], function(p){
+            log("Incomplete payment check.");
+        }).then(function(auth) {
+            log(`👋 Hello, ${auth.user.username}`);
+            // Show your dashboard logic here
+        }).catch(function(err) {
+            log("❌ Auth Error: " + err.message);
+        });
+    }
+</script>
 
     function startAudit() {
     // 1. Start UI Animation
@@ -135,4 +155,3 @@ function showFinalResult() {
 }
 </body>
 </html>
-
