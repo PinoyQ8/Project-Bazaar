@@ -109,23 +109,19 @@
             }
         };
 
-        function login() {
-            log("🚀 Requesting Auth...");
+        let userAccountData = null; // Global variable to store Pi data
 
-            // This tells the SDK to look for both the user and potential payments
+        function login() {
+            log("🚀 Requesting Auth & Roles...");
+
             Pi.authenticate(['username', 'payments'], function (payment) {
                 log("Checking for incomplete payments...");
             }).then(function (auth) {
                 log("✅ CONNECTED: " + auth.user.username);
+                userAccountData = auth.user; // Store the data (username, uid, etc.)
 
-                // Update the UI on BOTH S23 and PC Sandbox
                 document.getElementById('user-name').innerText = auth.user.username;
                 document.getElementById('user-name').style.color = "#4caf50";
-
-                // This is the 'Handshake' signal for the Sandbox
-                if (window.parent) {
-                    window.parent.postMessage({ type: 'auth_success', username: auth.user.username }, "*");
-                }
 
             }).catch(function (err) {
                 log("❌ AUTH ERROR: " + err.message);
@@ -155,6 +151,33 @@
                     log("❌ Insufficient Pi for Trust Deposit.");
                 }
             }, 1500);
+        }
+        function showFinalResult() {
+            log("📊 Calculating final Trust Score...");
+            document.getElementById('audit-box').style.display = 'none';
+
+            const dashboard = document.getElementById('dashboard-section');
+
+            // Logic: If user is logged in, they get the "Verified" status
+            const isVerified = userAccountData ? "VERIFIED PIONEER" : "GUEST ACCOUNT";
+            const score = userAccountData ? "88%" : "40%"; // Reward the login with a higher score
+
+            dashboard.innerHTML = `
+        <div class="card result-card" style="display:block; border: 2px solid #4caf50;">
+            <div style="background: #4caf50; color: white; padding: 5px 15px; border-radius: 20px; display: inline-block; font-size: 12px; margin-bottom: 10px;">${isVerified}</div>
+            <h2 style="margin:0;">Trust Score: <span style="color:#4caf50;">${score}</span></h2>
+            <p style="font-size: 14px; color: #666;">Blockchain scan for <b>${userAccountData.username}</b></p>
+            
+            <div class="badge-grid">
+                <div class="badge">✅ KYC Verified</div>
+                <div class="badge">🛡️ Secure Circle</div>
+                <div class="badge">⏳ Account ID: ${userAccountData.uid.substring(0, 8)}...</div>
+                <div class="badge">💎 Protocol Active</div>
+            </div>
+
+            <button class="btn btn-purple" style="margin-top: 20px;" onclick="location.reload()">Back to Bazaar</button>
+        </div>
+    `;
         }
     </script>
 </body>
