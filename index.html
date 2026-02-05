@@ -28,41 +28,23 @@
     <script>
         const log = (m) => { 
             const d = document.getElementById('logs');
-            d.innerHTML += "<div>> " + m + "</div>"; 
-            d.scrollTop = d.scrollHeight;
+            if(d) {
+                d.innerHTML += "<div>> " + m + "</div>"; 
+                d.scrollTop = d.scrollHeight;
+            }
         }
 
-        // 1. CLEAR STUCK PAYMENTS (The Fix for Timeouts)
-        function clearStuckPayments() {
-            log("🧹 Scanning for stuck payments...");
-            const onIncomplete = (payment) => {
-                log("⚠️ Found stuck ID: " + payment.identifier);
-                Pi.payment.complete(payment.identifier)
-                    .then(() => log("✅ Cleared! Try paying again."))
-                    .catch((e) => log("❌ Clear failed: " + e.message));
-            };
-            // Trigger the check
-            Pi.authenticate(['username', 'payments'], onIncomplete).then(() => log("scan complete."));
-        }
-
-        // 2. START SYSTEM
-        window.onload = function() {
-            try {
-                Pi.init({ version: "2.0" });
-                log("SDK Init.");
-                Pi.authenticate(['username', 'payments'], (p) => { log("Found incomplete: " + p.identifier); })
-                    .then(auth => {
-                        document.getElementById('user').innerText = auth.user.username;
-                        log("Signed in: " + auth.user.username);
-                    })
-                    .catch(e => log("Auth Error: " + e.message));
-            } catch(e) { log("Fatal: " + e.message); }
-        };
-
-        // 3. PAY (With Unique ID to prevent hangs)
         function payPi() {
+            // 1. DISABLE BUTTON to prevent double-clicks
+            const btn = document.querySelector('button');
+            if(btn) {
+                btn.disabled = true;
+                btn.innerText = "Processing...";
+                btn.style.background = "#999";
+            }
+
             const uniqueID = "audit-" + Date.now();
-            log("💎 Starting Payment...");
+            log("💎 Starting Payment Simulation...");
 
             Pi.createPayment({
                 amount: 1.0,
@@ -71,52 +53,76 @@
             }, {
                 onReadyForServerApproval: function(paymentId) {
                     log("📡 Payment ID: " + paymentId);
-                    log("⏳ Waiting for Server Approval...");
+                    log("⏳ Waiting for Server...");
                     
-                    // --- SIMULATION MODE START ---
-                    // Since we don't have a backend server on GitHub Pages,
-                    // we simulate the success after 4 seconds so you can see the app work.
-                    log("⚠️ GitHub Pages Mode: Simulating approval in 4s...");
+                    // SIMULATION: Force success after 3 seconds
                     setTimeout(() => {
-                        log("✅ Simulation: Payment Approved!");
-                        // Close the wallet popup (optional, user might have to close it manually)
-                        // Trigger the success animation
                         onPaymentSuccess("SIMULATED-TXID-888");
-                    }, 4000);
-                    // --- SIMULATION MODE END ---
+                    }, 3000);
                 },
                 onReadyForServerCompletion: function(paymentId, txid) {
                     onPaymentSuccess(txid);
                 },
-                onCancel: function() { log("⚠️ Cancelled."); },
+                onCancel: function() { 
+                    log("⚠️ Cancelled."); 
+                    // Re-enable button if cancelled
+                    if(btn) {
+                        btn.disabled = false;
+                        btn.innerText = "Test 1 Pi Payment";
+                        btn.style.background = "#4CAF50";
+                    }
+                },
                 onError: function(e) { log("❌ Error: " + e.message); }
             });
         }
 
-        // The Success Trigger
         function onPaymentSuccess(txid) {
-            log("✅ SUCCESS! TX: " + txid.substring(0,8));
+            // 2. CHECK if we already showed it (Stop duplicates)
+            if(document.getElementById('final-cert')) return;
+
+            log("✅ SUCCESS! Generating Certificate...");
+
+            // 3. WIPE THE SCREEN (The "Clean Slate" Method)
+            document.body.innerHTML = ""; 
+            document.body.style.background = "#ffffff"; // White background for certificate
             
-            // 1. Hide the Payment UI
-            document.querySelector('.box').style.display = 'none';
-            
-            // 2. Create the Success Certificate
-            const body = document.body;
+            // 4. Create the SINGLE Certificate
             const cert = document.createElement('div');
-            cert.style = "background:white; padding:20px; border-radius:15px; border: 4px solid #4CAF50; animation: pop 0.5s ease;";
+            cert.id = "final-cert"; // Give it an ID so we can track it
+            cert.style = "text-align:center; padding:40px; font-family:sans-serif; animation: pop 0.5s ease;";
             cert.innerHTML = `
-                <h1 style="color:#4CAF50; font-size:40px;">88%</h1>
-                <h2>TRUST VERIFIED</h2>
-                <p>User: <b>Pinoy</b></p>
-                <p>TX: ${txid}</p>
-                <button onclick="location.reload()" style="padding:10px; background:#673ab7; color:white; border:none; border-radius:5px;">Finish</button>
+                <div style="font-size:60px;">🛡️</div>
+                <h1 style="color:#4CAF50; font-size:50px; margin:10px 0;">88%</h1>
+                <h2 style="color:#333;">TRUST VERIFIED</h2>
+                <div style="background:#f4f4f4; padding:15px; border-radius:10px; display:inline-block; margin:20px 0;">
+                    <p style="margin:5px;">User: <b>Pinoy</b></p>
+                    <p style="margin:5px; font-size:12px; color:#666;">TXID: ${txid}</p>
+                </div>
+                <br>
+                <button onclick="location.reload()" style="padding:15px 30px; background:#673ab7; color:white; border:none; border-radius:5px; font-size:16px; cursor:pointer; margin-top:20px;">Done</button>
             `;
-            body.appendChild(cert);
             
-            // 3. S23 Haptic Vibrate
+            document.body.appendChild(cert);
+            
+            // S23 Haptic
             if(navigator.vibrate) navigator.vibrate([100,50,100]);
-        
         }
+        
+        // CSS Animation for the pop effect
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }`;
+        document.head.appendChild(style);
+
+        // Init
+        window.onload = function() {
+            try {
+                Pi.init({ version: "2.0" });
+                Pi.authenticate(['username', 'payments'], (p) => { Pi.payment.complete(p.identifier); })
+                    .then(auth => { 
+                        if(document.getElementById('status')) document.getElementById('status').innerText = "Ready: " + auth.user.username; 
+                    });
+            } catch(e) {}
+        };
     </script>
 </body>
 </html>
