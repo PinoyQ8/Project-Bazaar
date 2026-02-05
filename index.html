@@ -26,6 +26,9 @@
     <div id="logs"><b>> SYSTEM READY</b></div>
 
     <script>
+        // --- 1. THE GATEKEEPER ---
+        let auditDone = false; // This variable locks the door after one certificate
+
         const log = (m) => { 
             const d = document.getElementById('logs');
             if(d) {
@@ -35,7 +38,7 @@
         }
 
         function payPi() {
-            // 1. DISABLE BUTTON to prevent double-clicks
+            // Disable button immediately
             const btn = document.querySelector('button');
             if(btn) {
                 btn.disabled = true;
@@ -44,7 +47,7 @@
             }
 
             const uniqueID = "audit-" + Date.now();
-            log("💎 Starting Payment Simulation...");
+            log("💎 Starting Payment...");
 
             Pi.createPayment({
                 amount: 1.0,
@@ -52,75 +55,66 @@
                 metadata: { internalId: uniqueID } 
             }, {
                 onReadyForServerApproval: function(paymentId) {
-                    log("📡 Payment ID: " + paymentId);
                     log("⏳ Waiting for Server...");
                     
                     // SIMULATION: Force success after 3 seconds
                     setTimeout(() => {
-                        onPaymentSuccess("SIMULATED-TXID-888");
+                        // Pass a fake ID for the simulation
+                        onPaymentSuccess("SIMULATED-888");
                     }, 3000);
                 },
                 onReadyForServerCompletion: function(paymentId, txid) {
+                    // If the real sandbox works, it might trigger this too
                     onPaymentSuccess(txid);
                 },
-                onCancel: function() { 
-                    log("⚠️ Cancelled."); 
-                    // Re-enable button if cancelled
-                    if(btn) {
-                        btn.disabled = false;
-                        btn.innerText = "Test 1 Pi Payment";
-                        btn.style.background = "#4CAF50";
-                    }
-                },
+                onCancel: function() { log("⚠️ Cancelled."); },
                 onError: function(e) { log("❌ Error: " + e.message); }
             });
         }
 
         function onPaymentSuccess(txid) {
-            // 2. CHECK if we already showed it (Stop duplicates)
-            if(document.getElementById('final-cert')) return;
-
-            log("✅ SUCCESS! Generating Certificate...");
-
-            // 3. WIPE THE SCREEN (The "Clean Slate" Method)
-            document.body.innerHTML = ""; 
-            document.body.style.background = "#ffffff"; // White background for certificate
+            // --- 2. THE LOCK ---
+            // If we have already finished, STOP IMMEDIATELY.
+            if(auditDone === true) return; 
             
-            // 4. Create the SINGLE Certificate
+            // Otherwise, lock the door now.
+            auditDone = true; 
+
+            // --- 3. THE WIPE ---
+            // Nuke the entire body content instantly
+            document.body.innerHTML = ""; 
+            document.body.style.background = "#ffffff"; 
+
+            // --- 4. THE SINGLE CERTIFICATE ---
             const cert = document.createElement('div');
-            cert.id = "final-cert"; // Give it an ID so we can track it
-            cert.style = "text-align:center; padding:40px; font-family:sans-serif; animation: pop 0.5s ease;";
+            cert.style = "text-align:center; padding:40px; font-family:sans-serif; animation: pop 0.5s ease; max-width: 400px; margin: 0 auto;";
             cert.innerHTML = `
-                <div style="font-size:60px;">🛡️</div>
-                <h1 style="color:#4CAF50; font-size:50px; margin:10px 0;">88%</h1>
-                <h2 style="color:#333;">TRUST VERIFIED</h2>
-                <div style="background:#f4f4f4; padding:15px; border-radius:10px; display:inline-block; margin:20px 0;">
-                    <p style="margin:5px;">User: <b>Pinoy</b></p>
-                    <p style="margin:5px; font-size:12px; color:#666;">TXID: ${txid}</p>
+                <div style="font-size:60px; margin-bottom:20px;">🛡️</div>
+                <h1 style="color:#4CAF50; font-size:50px; margin:0;">88%</h1>
+                <h2 style="color:#333; margin:10px 0;">TRUST VERIFIED</h2>
+                <div style="background:#f4f4f4; padding:15px; border-radius:10px; margin:20px 0;">
+                    <p style="margin:5px; font-weight:bold;">User: Pinoy</p>
+                    <p style="margin:5px; font-size:12px; color:#666;">ID: ${txid}</p>
                 </div>
-                <br>
-                <button onclick="location.reload()" style="padding:15px 30px; background:#673ab7; color:white; border:none; border-radius:5px; font-size:16px; cursor:pointer; margin-top:20px;">Done</button>
+                <button onclick="location.reload()" style="padding:15px 30px; background:#673ab7; color:white; border:none; border-radius:5px; font-size:16px; cursor:pointer; margin-top:10px;">Done</button>
             `;
             
             document.body.appendChild(cert);
             
-            // S23 Haptic
             if(navigator.vibrate) navigator.vibrate([100,50,100]);
         }
-        
-        // CSS Animation for the pop effect
+
+        // Add Animation Style
         const style = document.createElement('style');
         style.innerHTML = `@keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }`;
         document.head.appendChild(style);
 
-        // Init
+        // Standard Init
         window.onload = function() {
             try {
                 Pi.init({ version: "2.0" });
                 Pi.authenticate(['username', 'payments'], (p) => { Pi.payment.complete(p.identifier); })
-                    .then(auth => { 
-                        if(document.getElementById('status')) document.getElementById('status').innerText = "Ready: " + auth.user.username; 
-                    });
+                    .then(auth => { if(document.getElementById('status')) document.getElementById('status').innerText = auth.user.username; });
             } catch(e) {}
         };
     </script>
