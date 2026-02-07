@@ -14,21 +14,20 @@
         .gauge { width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(var(--gold) 54deg, #333 0deg); margin: 5px auto; display: flex; align-items: center; justify-content: center; transition: all 0.5s ease; }
         .gauge-inner { width: 75px; height: 75px; background: var(--card); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .btn { background: linear-gradient(to bottom, var(--gold), #b8860b); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.75rem; transition: transform 0.1s; -webkit-tap-highlight-color: transparent; }
+        .btn { background: linear-gradient(to bottom, var(--gold), #b8860b); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.75rem; transition: transform 0.1s; -webkit-tap-highlight-color: transparent; width: 100%; }
         .btn:active { transform: scale(0.96); opacity: 0.8; }
         .btn-blue { background: none; border: 1px solid var(--blue); color: var(--blue); }
         .btn-danger { background: none; border: 1px solid var(--red); color: var(--red); }
         #custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.95); display: none; align-items: center; justify-content: center; z-index: 10000; }
         .modal { background: var(--card); padding: 20px; border-radius: 15px; border: 2px solid var(--gold); width: 280px; text-align: center; }
-        .qr-container { width: 160px; height: 160px; background: #333; margin: 15px auto; border: 8px solid white; display: flex; align-items: center; justify-content: center; position: relative; }
-        .qr-container::before { content: "GENERATING..."; font-size: 10px; color: #666; position: absolute; }
+        .qr-container { width: 140px; height: 140px; background: #333; margin: 10px auto; border: 4px solid white; display: flex; align-items: center; justify-content: center; position: relative; }
         .qr-container img { width: 100%; display: block; position: relative; z-index: 2; }
     </style>
 </head>
 <body>
 
     <div class="logo-container">
-        <img src="logo.png" alt="Project Bazaar Logo" class="main-logo" onerror="this.src='https://minepi.com/wp-content/uploads/2023/05/Pi-Network-Logo.png'">
+        <img src="logo.png" alt="Logo" class="main-logo" onerror="this.src='https://minepi.com/wp-content/uploads/2023/05/Pi-Network-Logo.png'">
     </div>
 
     <h4 style="color: var(--gold); margin: 5px 0;">BAZAAR ELITE COMMAND</h4>
@@ -54,9 +53,112 @@
     </div>
 
     <div class="card">
-        <p style="font-size: 0.6rem; margin-bottom: 5px;" id="status">● SECURITY BOND: NOT STAKED</p>
+        <p style="font-size: 0.6rem; margin: 0 0 5px 0;" id="status">● SECURITY BOND: NOT STAKED</p>
         <button class="btn" id="stake-btn">🔒 LOCK 20 PI BOND</button>
     </div>
 
     <div class="card" style="border: 1px solid var(--blue); background: rgba(52, 152, 219, 0.05);">
-        <h5 style="margin
+        <h5 style="margin: 0 0 10px 0; color: var(--blue);">🛒 BUYER SIMULATOR</h5>
+        <p id="buyer-status" style="font-size: 0.6rem; color: #888; margin-bottom: 8px;">SIMULATION: ACTION AS CUSTOMER</p>
+        
+        <div id="order-box" style="display:none; background: #252525; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+            <span style="font-size: 0.7rem; color: var(--gold); display: block; margin-bottom: 5px;">🛒 NEW ORDER: 10 PI PAID</span>
+            <button class="btn" style="padding: 8px;" id="ship-btn">📦 SHIP ITEM NOW</button>
+        </div>
+        
+        <button class="btn btn-blue" id="buy-sim-btn">📱 SCAN & PAY 10 PI</button>
+    </div>
+
+    <div id="custom-modal-overlay">
+        <div class="modal">
+            <h3 id="m-title" style="color: var(--gold); margin: 0 0 10px 0; font-size: 1rem;"></h3>
+            <div id="m-content"></div>
+            <button class="btn" style="margin-top: 15px;" id="close-modal-btn">CLOSE</button>
+        </div>
+    </div>
+
+    <script>
+        let trust = 15;
+        let connected = false;
+
+        const updateUI = () => {
+            trust = Math.max(0, Math.min(100, trust));
+            document.getElementById('gauge').style.background = `conic-gradient(var(--gold) ${trust * 3.6}deg, #333 0deg)`;
+            document.getElementById('score').innerText = trust + "%";
+            let label = (trust >= 85) ? "ELDER" : (trust >= 50) ? "VERIFIED" : (trust >= 25) ? "PROVEN" : "ITERANT";
+            document.getElementById('tier-label').innerText = label;
+        };
+
+        const showM = (t, c, isH = false) => {
+            document.getElementById('m-title').innerText = t;
+            const content = document.getElementById('m-content');
+            if(isH) content.innerHTML = c; else content.innerText = c;
+            document.getElementById('custom-modal-overlay').style.display = 'flex';
+        };
+
+        const closeM = () => { document.getElementById('custom-modal-overlay').style.display = 'none'; };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+
+            // Connect
+            document.getElementById('conn-btn').onclick = function() {
+                connected = true;
+                this.innerText = "🟢 PINOYQ8 LINKED";
+                this.style.color = "var(--green)";
+                this.style.borderColor = "var(--green)";
+                showM("CONNECTED", "Merchant Wallet synced.");
+            };
+
+            // QR Invoice
+            document.getElementById('qr-btn').onclick = () => {
+                if(!connected) return showM("STOP", "Connect wallet first.");
+                const url = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=pi://pay/pinoyq8?amount=10";
+                showM("QR INVOICE", `<div class="qr-container"><img src="${url}"></div><p style="color:var(--gold);font-size:0.7rem;">Awaiting 10 Pi...</p>`, true);
+            };
+
+            // Buyer Simulate
+            document.getElementById('buy-sim-btn').onclick = function() {
+                if(!connected) return showM("ERROR", "Merchant must be connected.");
+                this.innerText = "⏳ PROCESSING...";
+                this.disabled = true;
+                setTimeout(() => {
+                    this.innerText = "✅ 10 PI SENT";
+                    this.style.color = "var(--green)";
+                    document.getElementById('order-box').style.display = 'block';
+                    document.getElementById('buyer-status').innerText = "PAYMENT VERIFIED";
+                    showM("PAYMENT", "10 Pi received! Ship your item.");
+                }, 1500);
+            };
+
+            // Ship Item
+            document.getElementById('ship-btn').onclick = () => {
+                trust += 5;
+                updateUI();
+                document.getElementById('order-box').style.display = 'none';
+                document.getElementById('buyer-status').innerText = "ORDER FULFILLED";
+                document.getElementById('buy-sim-btn').innerText = "📱 SCAN & PAY 10 PI";
+                document.getElementById('buy-sim-btn').disabled = false;
+                document.getElementById('buy-sim-btn').style = "";
+                showM("SHIPPED", "Trust +5% for fulfillment!");
+            };
+
+            // Other Buttons
+            document.getElementById('stake-btn').onclick = () => {
+                if(!connected) return showM("STOP", "Connect first.");
+                trust += 10; updateUI();
+                document.getElementById('status').innerText = "● SECURITY BOND: SECURE";
+                document.getElementById('status').style.color = "var(--green)";
+                document.getElementById('stake-btn').innerText = "✅ BOND ACTIVE";
+                document.getElementById('stake-btn').disabled = true;
+                showM("STAKED", "20 Pi Bond locked.");
+            };
+
+            document.getElementById('vouch-btn').onclick = () => { if(connected) { trust += 5; updateUI(); showM("VOUCH", "+5% Reputation!"); } };
+            document.getElementById('decay-btn').onclick = () => { if(connected) { trust -= 3; updateUI(); showM("DECAY", "Reputation reduced."); } };
+            document.getElementById('freeze-btn').onclick = () => { if(connected) showM("FROZEN", "Account safety lock active."); };
+            document.getElementById('close-modal-btn').onclick = closeM;
+        });
+    </script>
+</body>
+</html>
