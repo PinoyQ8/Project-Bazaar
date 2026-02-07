@@ -11,17 +11,18 @@
         :root {
             --gold: #FFD700;
             --pi-purple: #612F74;
-            --bg: #121212;
-            --card: #1e1e1e;
+            --bg: #0a0a0a;
+            --card: rgba(30, 30, 30, 0.7);
+            /* Translucent for Glass Effect */
             --red: #ff4444;
             --green: #4CAF50;
             --blue: #3498db;
         }
 
         body {
-            background: var(--bg);
+            background: radial-gradient(circle at top, #1a1a1a, #050505);
             color: white;
-            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
             text-align: center;
@@ -43,28 +44,28 @@
         @keyframes pulse {
             0% {
                 transform: scale(1);
-                filter: drop-shadow(0 0 5px var(--gold));
+                filter: drop-shadow(0 0 2px var(--gold));
             }
 
             50% {
-                transform: scale(1.05);
-                filter: drop-shadow(0 0 12px var(--gold));
+                transform: scale(1.03);
+                filter: drop-shadow(0 0 10px var(--gold));
             }
 
             100% {
                 transform: scale(1);
-                filter: drop-shadow(0 0 5px var(--gold));
+                filter: drop-shadow(0 0 2px var(--gold));
             }
         }
 
         .logo-container {
-            width: 85px;
-            height: 85px;
+            width: 90px;
+            height: 90px;
             margin: 15px auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            animation: pulse 2s infinite ease-in-out;
+            animation: pulse 3s infinite ease-in-out;
         }
 
         .main-logo {
@@ -73,34 +74,37 @@
             object-fit: cover;
             border-radius: 50%;
             border: 2px solid var(--gold);
-            background: #222;
+            background: #111;
         }
 
+        /* GLASSMORPHISM CARD */
         .card {
             background: var(--card);
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 15px;
-            margin: 0 10px 12px 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            border-radius: 16px;
+            padding: 18px;
+            margin: 0 12px 15px 12px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
         .gauge {
-            width: 100px;
-            height: 100px;
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
-            background: conic-gradient(var(--gold) 54deg, #333 0deg);
+            background: conic-gradient(var(--gold) 54deg, rgba(255, 255, 255, 0.05) 0deg);
             margin: 5px auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.5s ease;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .gauge-inner {
-            width: 75px;
-            height: 75px;
-            background: var(--card);
+            width: 85px;
+            height: 85px;
+            background: #181818;
             border-radius: 50%;
             display: flex;
             flex-direction: column;
@@ -108,68 +112,43 @@
             justify-content: center;
         }
 
-        .btn-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
         .btn {
-            background: linear-gradient(to bottom, var(--gold), #b8860b);
+            background: linear-gradient(135deg, var(--gold), #b8860b);
             color: black;
             border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 800;
             cursor: pointer;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             width: 100%;
-            -webkit-tap-highlight-color: transparent;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
         }
 
         .btn-blue {
-            background: none;
+            background: rgba(52, 152, 219, 0.1);
             border: 1px solid var(--blue);
             color: var(--blue);
         }
 
         .btn-danger {
-            background: none;
+            background: rgba(255, 68, 68, 0.1);
             border: 1px solid var(--red);
             color: var(--red);
         }
 
-        #custom-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-
-        .modal {
-            background: var(--card);
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid var(--gold);
-            width: 280px;
-            text-align: center;
-        }
-
         .audit-entry {
             text-align: left;
-            font-family: monospace;
-            font-size: 0.52rem;
-            color: #aaa;
-            margin-bottom: 8px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.55rem;
+            color: #ddd;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 6px;
+            border-left: 2px solid var(--blue);
             word-break: break-all;
         }
     </style>
