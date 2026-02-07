@@ -6,26 +6,28 @@
     <title>Project Bazaar | 2026 Elite</title>
     <style>
         :root { --gold: #FFD700; --pi-purple: #612F74; --bg: #121212; --card: #1e1e1e; --red: #ff4444; --green: #4CAF50; --blue: #3498db; }
-        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; padding: 10px; text-align: center; box-sizing: border-box; overflow-x: hidden; }
+        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; padding: 10px; text-align: center; box-sizing: border-box; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
         
         .seal { width: 50px; height: 50px; background: var(--gold); border-radius: 50%; margin: 5px auto; display: flex; align-items: center; justify-content: center; border: 2px solid var(--pi-purple); }
         .pi { color: var(--pi-purple); font-size: 25px; font-weight: bold; }
 
-        .card { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+        .card { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); position: relative; }
         .gauge { width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(var(--gold) 54deg, #333 0deg); margin: 5px auto; display: flex; align-items: center; justify-content: center; transition: all 0.5s ease; }
         .gauge-inner { width: 75px; height: 75px; background: var(--card); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .btn { background: linear-gradient(to bottom, var(--gold), #b8860b); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.75rem; }
+        
+        /* Optimized Button for S23 Touch */
+        .btn { background: linear-gradient(to bottom, var(--gold), #b8860b); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.75rem; transition: transform 0.1s; -webkit-tap-highlight-color: transparent; }
+        .btn:active { transform: scale(0.96); opacity: 0.8; }
+        
         .btn-blue { background: none; border: 1px solid var(--blue); color: var(--blue); }
         .btn-danger { background: none; border: 1px solid var(--red); color: var(--red); }
 
-        /* S23 MODAL FIX: Fixed dimensions to prevent white-screen crash */
-        #custom-modal-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); display:none; align-items:center; justify-content:center; z-index:10000; }
-        .modal { background: var(--card); padding: 20px; border-radius: 15px; border: 2px solid var(--gold); width: 280px; min-height: 200px; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        
-        .qr-container { width: 160px; height: 160px; background: white; margin: 15px auto; border: 8px solid white; display: flex; align-items: center; justify-content: center; }
-        .qr-container img { width: 100%; height: auto; display: block; }
+        #custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.95); display: none; align-items: center; justify-content: center; z-index: 10000; }
+        .modal { background: var(--card); padding: 20px; border-radius: 15px; border: 2px solid var(--gold); width: 280px; text-align: center; }
+        .qr-container { width: 160px; height: 160px; background: white; margin: 15px auto; border: 8px solid white; }
+        .qr-container img { width: 100%; display: block; }
     </style>
 </head>
 <body>
@@ -40,17 +42,110 @@
                 <span id="tier-label" style="font-size: 0.5rem; color: #888;">ITERANT</span>
             </div>
         </div>
-        <button class="btn" style="background:none; border: 1px solid var(--gold); color: var(--gold); width: auto; padding: 5px 15px; margin-top: 10px;" id="conn-btn" onclick="connect()">🔌 CONNECT WALLET</button>
+        <button class="btn" id="conn-btn" style="background:none; border: 1px solid var(--gold); color: var(--gold); width: auto; padding: 8px 15px; margin-top: 10px;">🔌 CONNECT WALLET</button>
     </div>
 
     <div class="card">
         <h5 style="margin: 0 0 10px 0; color: var(--gold);">🛠️ MERCHANT UTILITY</h5>
         <div class="btn-grid">
-            <button class="btn btn-blue" onclick="genQR()">📱 QR INVOICE</button>
-            <button class="btn btn-danger" onclick="freeze()">❄️ FREEZE ACC</button>
-            <button class="btn" style="background:#333; color:var(--gold); border: 1px solid var(--gold);" onclick="adjustTrust(5, 'Vouch Received!')">🤝 VOUCH</button>
-            <button class="btn" style="background:#333; color:var(--gold); border: 1px solid var(--gold);" onclick="adjustTrust(-3, 'Decay Applied.')">📉 DECAY</button>
+            <button class="btn btn-blue" id="qr-btn">📱 QR INVOICE</button>
+            <button class="btn btn-danger" id="freeze-btn">❄️ FREEZE ACC</button>
+            <button class="btn" style="background:#333; color:var(--gold); border: 1px solid var(--gold);" id="vouch-btn">🤝 VOUCH</button>
+            <button class="btn" style="background:#333; color:var(--gold); border: 1px solid var(--gold);" id="decay-btn">📉 DECAY</button>
         </div>
     </div>
 
-    <div class="
+    <div class="card">
+        <p style="font-size: 0.6rem; margin-bottom: 5px;" id="status">● SECURITY BOND: NOT STAKED</p>
+        <button class="btn" id="stake-btn">🔒 LOCK 20 PI BOND</button>
+    </div>
+
+    <div id="custom-modal-overlay">
+        <div class="modal">
+            <h3 id="m-title" style="color: var(--gold); margin-top: 0; font-size: 1rem;"></h3>
+            <div id="m-content"></div>
+            <button class="btn" style="margin-top: 15px;" id="close-modal-btn">CLOSE</button>
+        </div>
+    </div>
+
+    <script>
+        let trust = 15;
+        let connected = false;
+
+        function updateUI() {
+            trust = Math.max(0, Math.min(100, trust));
+            const angle = trust * 3.6;
+            document.getElementById('gauge').style.background = `conic-gradient(var(--gold) ${angle}deg, #333 0deg)`;
+            document.getElementById('score').innerText = trust + "%";
+            let label = (trust >= 85) ? "ELDER" : (trust >= 50) ? "VERIFIED" : (trust >= 25) ? "PROVEN" : "ITERANT";
+            document.getElementById('tier-label').innerText = label;
+        }
+
+        function showM(t, b, isHtml = false) {
+            document.getElementById('m-title').innerText = t;
+            const content = document.getElementById('m-content');
+            if (isHtml) content.innerHTML = b; else content.innerText = b;
+            document.getElementById('custom-modal-overlay').style.display = 'flex';
+        }
+
+        // --- S23 EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+            
+            // Connect Button
+            document.getElementById('conn-btn').addEventListener('click', function() {
+                connected = true;
+                this.innerText = "🟢 PINOYQ8 LINKED";
+                this.style.color = "var(--green)";
+                this.style.borderColor = "var(--green)";
+                showM("CONNECTED", "Pi Wallet G...P8Q8 synced successfully.");
+            });
+
+            // Stake Button
+            document.getElementById('stake-btn').addEventListener('click', () => {
+                if (!connected) { showM("WAIT!", "Connect wallet first."); return; }
+                trust += 10;
+                updateUI();
+                document.getElementById('status').innerText = "● SECURITY BOND: SECURE";
+                document.getElementById('status').style.color = "var(--green)";
+                const sBtn = document.getElementById('stake-btn');
+                sBtn.innerText = "✅ BOND ACTIVE";
+                sBtn.disabled = true;
+                sBtn.style.opacity = "0.5";
+                showM("BOND ACTIVE", "20 Pi successfully locked.");
+            });
+
+            // QR Button
+            document.getElementById('qr-btn').addEventListener('click', () => {
+                if (!connected) { showM("STOP", "Connect wallet first."); return; }
+                const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=pi://pay/pinoyq8";
+                const qrHtml = `<div class="qr-container"><img src="${qrUrl}" alt="QR"></div><p style="font-size:0.7rem; color:var(--gold)">Scan to Pay Merchant</p>`;
+                showM("QR INVOICE", qrHtml, true);
+            });
+
+            // Freeze Button
+            document.getElementById('freeze-btn').addEventListener('click', () => {
+                if (!connected) { showM("STOP", "Connect wallet first."); return; }
+                showM("❄️ ACCOUNT FROZEN", "Emergency protocol active.");
+            });
+
+            // Vouch Button
+            document.getElementById('vouch-btn').addEventListener('click', () => {
+                if (!connected) { showM("STOP", "Connect wallet first."); return; }
+                trust += 5; updateUI(); showM("REPUTATION", "Vouch Received!");
+            });
+
+            // Decay Button
+            document.getElementById('decay-btn').addEventListener('click', () => {
+                if (!connected) { showM("STOP", "Connect wallet first."); return; }
+                trust -= 3; updateUI(); showM("REPUTATION", "Decay Applied.");
+            });
+
+            // Close Modal
+            document.getElementById('close-modal-btn').addEventListener('click', () => {
+                document.getElementById('custom-modal-overlay').style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
