@@ -37,7 +37,7 @@
     </div>
 
     <div class="logo-container">
-        <img src="logo.png" alt="Logo" class="main-logo" onerror="this.src='https://minepi.com/wp-content/uploads/2023/05/Pi-Network-Logo.png'">
+        <img src="icon.png" alt="Logo" class="main-logo" onerror="this.src='https://minepi.com/wp-content/uploads/2023/05/Pi-Network-Logo.png'">
     </div>
 
     <h4 style="color: var(--gold); margin: 5px 0;">BAZAAR ELITE COMMAND</h4>
@@ -92,13 +92,34 @@
     <script>
         let trust = 15;
         let connected = false;
+        let frozen = false;
 
         function updateUI() {
-            trust = Math.max(0, Math.min(100, trust));
-            document.getElementById('gauge').style.background = `conic-gradient(var(--gold) ${trust * 3.6}deg, #333 0deg)`;
-            document.getElementById('score').innerText = trust + "%";
-            let label = (trust >= 85) ? "ELDER" : (trust >= 50) ? "VERIFIED" : (trust >= 25) ? "PROVEN" : "ITERANT";
-            document.getElementById('tier-label').innerText = label;
+            if (frozen) {
+                // RED ALERT MODE
+                document.getElementById('gauge').style.background = `conic-gradient(var(--red) 100deg, #333 0deg)`;
+                document.getElementById('score').innerText = "LOCK";
+                document.getElementById('score').style.color = "var(--red)";
+                document.getElementById('tier-label').innerText = "SUSPENDED";
+                document.getElementById('tier-label').style.color = "var(--red)";
+                
+                // Disable buttons visually
+                document.getElementById('stake-btn').style.opacity = "0.5";
+                document.getElementById('qr-btn').style.opacity = "0.5";
+            } else {
+                // NORMAL GOLD MODE
+                trust = Math.max(0, Math.min(100, trust));
+                document.getElementById('gauge').style.background = `conic-gradient(var(--gold) ${trust * 3.6}deg, #333 0deg)`;
+                document.getElementById('score').innerText = trust + "%";
+                document.getElementById('score').style.color = "white";
+                let label = (trust >= 85) ? "ELDER" : (trust >= 50) ? "VERIFIED" : (trust >= 25) ? "PROVEN" : "ITERANT";
+                document.getElementById('tier-label').innerText = label;
+                document.getElementById('tier-label').style.color = "#888";
+
+                // Enable buttons
+                document.getElementById('stake-btn').style.opacity = "1";
+                document.getElementById('qr-btn').style.opacity = "1";
+            }
         }
 
         function showM(t, c, isH = false) {
@@ -112,29 +133,56 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             updateUI();
+
             document.getElementById('conn-btn').onclick = function() {
+                if(frozen) return showM("ERROR", "Account is frozen. Cannot connect.");
                 connected = true;
                 this.innerText = "🟢 PINOYQ8 LINKED";
                 this.style.color = "var(--green)";
                 this.style.borderColor = "var(--green)";
                 showM("CONNECTED", "Merchant Wallet synced.");
             };
+
             document.getElementById('qr-btn').onclick = () => {
+                if(frozen) return showM("ERROR", "Account is frozen.");
                 if(!connected) return showM("STOP", "Connect wallet first.");
                 const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=pi://pay/pinoyq8?amount=10";
                 showM("QR INVOICE", `<div class="qr-container"><img src="${qrUrl}" style="width:140px;"></div>`, true);
             };
-            document.getElementById('stake-btn').onclick = () => {
+
+            // ❄️ FREEZE LOGIC
+            document.getElementById('freeze-btn').onclick = function() {
+                if(!connected) return showM("SECURITY", "Connect wallet to access security controls.");
+                
+                if(frozen) {
+                    frozen = false;
+                    this.innerHTML = "❄️ FREEZE ACC";
+                    this.style.borderColor = "var(--red)";
+                    this.style.color = "var(--red)";
+                    showM("RESTORED", "Account limits lifted.");
+                } else {
+                    frozen = true;
+                    this.innerHTML = "🔓 UNLOCK";
+                    this.style.borderColor = "var(--gold)";
+                    this.style.color = "var(--gold)";
+                    showM("FROZEN", "⚠️ EMERGENCY STOP\n\nTrust Score hidden. Transactions paused.");
+                }
+                updateUI();
+            };
+
+            document.getElementById('stake-btn').onclick = function() {
+                if(frozen) return showM("ERROR", "Account is frozen.");
                 if(!connected) return showM("STOP", "Connect first.");
                 trust += 10; updateUI();
                 document.getElementById('status').innerText = "● SECURITY BOND: SECURE";
                 document.getElementById('status').style.color = "var(--green)";
-                document.getElementById('stake-btn').innerText = "✅ BOND ACTIVE";
-                document.getElementById('stake-btn').disabled = true;
+                this.innerText = "✅ BOND ACTIVE";
+                this.disabled = true;
                 showM("STAKED", "20 Pi Bond locked.");
             };
-            document.getElementById('vouch-btn').onclick = () => { if(connected) { trust += 5; updateUI(); } };
-            document.getElementById('decay-btn').onclick = () => { if(connected) { trust -= 3; updateUI(); } };
+
+            document.getElementById('vouch-btn').onclick = () => { if(connected && !frozen) { trust += 5; updateUI(); } };
+            document.getElementById('decay-btn').onclick = () => { if(connected && !frozen) { trust -= 3; updateUI(); } };
             document.getElementById('close-modal-btn').onclick = closeM;
         });
     </script>
