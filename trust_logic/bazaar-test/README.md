@@ -53,7 +53,7 @@ This project utilizes the **Stellar Soroban (Rust) SDK** for on-chain trust enfo
 ### Setup Instructions
 1.  **Clone the Repository:**
     ```bash
-    git clone [https://github.com/](https://github.com/)[PinoyQ8]/Project-Bazaar.git
+    git clone [https://github.com/](https://github.com/)[Your-Username]/Project-Bazaar.git
     ```
 2.  **Open in Environment:**
     Open `index.html` in your local server or deploy via GitHub Pages.
