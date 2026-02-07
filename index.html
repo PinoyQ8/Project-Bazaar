@@ -8,39 +8,31 @@
         :root { --gold: #FFD700; --pi-purple: #612F74; --bg: #121212; --card: #1e1e1e; --red: #ff4444; --green: #4CAF50; --blue: #3498db; }
         body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; padding: 0; text-align: center; box-sizing: border-box; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
         
-        /* 📢 TICKER ANIMATION */
-        @keyframes scrollText {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
-
-        /* 🎨 CIRCULAR LOGO UPGRADE */
-        .logo-container { width: 85px; height: 85px; margin: 10px auto; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite ease-in-out; }
-        .main-logo { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 2px solid var(--gold); filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5)); }
-        
+        @keyframes scrollText { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
         @keyframes pulse { 0% { transform: scale(1); filter: drop-shadow(0 0 5px var(--gold)); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 12px var(--gold)); } 100% { transform: scale(1); filter: drop-shadow(0 0 5px var(--gold)); } }
+
+        .logo-container { width: 85px; height: 85px; margin: 10px auto; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite ease-in-out; }
+        .main-logo { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 2px solid var(--gold); }
         
-        .card { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 15px; margin: 0 10px 12px 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); position: relative; }
+        .card { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 15px; margin: 0 10px 12px 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); }
         .gauge { width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(var(--gold) 54deg, #333 0deg); margin: 5px auto; display: flex; align-items: center; justify-content: center; transition: all 0.5s ease; }
         .gauge-inner { width: 75px; height: 75px; background: var(--card); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .btn { background: linear-gradient(to bottom, var(--gold), #b8860b); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.75rem; transition: transform 0.1s; -webkit-tap-highlight-color: transparent; width: 100%; }
-        .btn:active { transform: scale(0.96); opacity: 0.8; }
+        .btn { background: linear-gradient(to bottom, var(--gold), #b8860b); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.75rem; width: 100%; -webkit-tap-highlight-color: transparent; }
         .btn-blue { background: none; border: 1px solid var(--blue); color: var(--blue); }
         .btn-danger { background: none; border: 1px solid var(--red); color: var(--red); }
-        
+
         #custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.95); display: none; align-items: center; justify-content: center; z-index: 10000; }
         .modal { background: var(--card); padding: 20px; border-radius: 15px; border: 2px solid var(--gold); width: 280px; text-align: center; }
-        .qr-container { width: 140px; height: 140px; background: #333; margin: 10px auto; border: 4px solid white; display: flex; align-items: center; justify-content: center; position: relative; }
-        .qr-container img { width: 100%; display: block; position: relative; z-index: 2; }
+        .qr-container { width: 140px; height: 140px; background: white; margin: 10px auto; padding: 5px; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div style="background: var(--gold); color: black; font-size: 0.65rem; font-weight: bold; padding: 6px 0; overflow: hidden; white-space: nowrap; border-bottom: 2px solid #b8860b; margin-bottom: 15px;">
         <div style="display: inline-block; animation: scrollText 18s linear infinite;">
-            🚀 PROJECT BAZAAR GENESIS IS LIVE • 65% MESH ACTIVATION REACHED • WELCOME PIONEERS FROM PHILIPPINES & KUWAIT • BQS v1.0 AUDIT READY • 🛡️ SECURITY BOND ACTIVE •
+            🚀 PROJECT BAZAAR GENESIS IS LIVE • 65% MESH ACTIVATION REACHED • WELCOME PIONEERS FROM PHILIPPINES & KUWAIT • BQS v1.0 AUDIT READY •
         </div>
     </div>
 
@@ -51,12 +43,7 @@
     <h4 style="color: var(--gold); margin: 5px 0;">BAZAAR ELITE COMMAND</h4>
 
     <div class="card">
-        <div class="gauge" id="gauge">
-            <div class="gauge-inner">
-                <h2 id="score" style="margin:0;">15%</h2>
-                <span id="tier-label" style="font-size: 0.5rem; color: #888;">ITERANT</span>
-            </div>
-        </div>
+        <div class="gauge" id="gauge"><div class="gauge-inner"><h2 id="score" style="margin:0;">15%</h2><span id="tier-label" style="font-size: 0.5rem; color: #888;">ITERANT</span></div></div>
         <button class="btn" id="conn-btn" style="background:none; border: 1px solid var(--gold); color: var(--gold); width: auto; padding: 8px 15px; margin-top: 10px;">🔌 CONNECT WALLET</button>
     </div>
 
@@ -73,18 +60,6 @@
     <div class="card">
         <p style="font-size: 0.6rem; margin: 0 0 5px 0;" id="status">● SECURITY BOND: NOT STAKED</p>
         <button class="btn" id="stake-btn">🔒 LOCK 20 PI BOND</button>
-    </div>
-
-    <div class="card" style="border: 1px solid var(--blue); background: rgba(52, 152, 219, 0.05);">
-        <h5 style="margin: 0 0 10px 0; color: var(--blue);">🛒 BUYER SIMULATOR</h5>
-        <p id="buyer-status" style="font-size: 0.6rem; color: #888; margin-bottom: 8px;">SIMULATION: ACTION AS CUSTOMER</p>
-        
-        <div id="order-box" style="display:none; background: #252525; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
-            <span style="font-size: 0.7rem; color: var(--gold); display: block; margin-bottom: 5px;">🛒 NEW ORDER: 10 PI PAID</span>
-            <button class="btn" style="padding: 8px;" id="ship-btn">📦 SHIP ITEM NOW</button>
-        </div>
-        
-        <button class="btn btn-blue" id="buy-sim-btn">📱 SCAN & PAY 10 PI</button>
     </div>
 
     <div class="card" style="border: 1px dashed var(--gold); background: rgba(255, 215, 0, 0.02); margin-top: 20px;">
@@ -118,6 +93,50 @@
         let trust = 15;
         let connected = false;
 
-        const updateUI = () => {
+        function updateUI() {
             trust = Math.max(0, Math.min(100, trust));
-            document.getElementById('gauge').style.background = `conic-gradient(var(--gold) ${trust * 3.6}deg, #333
+            document.getElementById('gauge').style.background = `conic-gradient(var(--gold) ${trust * 3.6}deg, #333 0deg)`;
+            document.getElementById('score').innerText = trust + "%";
+            let label = (trust >= 85) ? "ELDER" : (trust >= 50) ? "VERIFIED" : (trust >= 25) ? "PROVEN" : "ITERANT";
+            document.getElementById('tier-label').innerText = label;
+        }
+
+        function showM(t, c, isH = false) {
+            document.getElementById('m-title').innerText = t;
+            const content = document.getElementById('m-content');
+            if(isH) content.innerHTML = c; else content.innerText = c;
+            document.getElementById('custom-modal-overlay').style.display = 'flex';
+        }
+
+        function closeM() { document.getElementById('custom-modal-overlay').style.display = 'none'; }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+            document.getElementById('conn-btn').onclick = function() {
+                connected = true;
+                this.innerText = "🟢 PINOYQ8 LINKED";
+                this.style.color = "var(--green)";
+                this.style.borderColor = "var(--green)";
+                showM("CONNECTED", "Merchant Wallet synced.");
+            };
+            document.getElementById('qr-btn').onclick = () => {
+                if(!connected) return showM("STOP", "Connect wallet first.");
+                const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=pi://pay/pinoyq8?amount=10";
+                showM("QR INVOICE", `<div class="qr-container"><img src="${qrUrl}" style="width:140px;"></div>`, true);
+            };
+            document.getElementById('stake-btn').onclick = () => {
+                if(!connected) return showM("STOP", "Connect first.");
+                trust += 10; updateUI();
+                document.getElementById('status').innerText = "● SECURITY BOND: SECURE";
+                document.getElementById('status').style.color = "var(--green)";
+                document.getElementById('stake-btn').innerText = "✅ BOND ACTIVE";
+                document.getElementById('stake-btn').disabled = true;
+                showM("STAKED", "20 Pi Bond locked.");
+            };
+            document.getElementById('vouch-btn').onclick = () => { if(connected) { trust += 5; updateUI(); } };
+            document.getElementById('decay-btn').onclick = () => { if(connected) { trust -= 3; updateUI(); } };
+            document.getElementById('close-modal-btn').onclick = closeM;
+        });
+    </script>
+</body>
+</html>
