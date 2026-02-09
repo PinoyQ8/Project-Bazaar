@@ -14,6 +14,7 @@ The core of Bazaar is the **Market Guard** engine, which manages merchant reputa
 
 * **Seal of Excellence:** Automatically awarded to elite merchants with a score of **+2049**.
 * **The Exile Protocol:** Automated system exile for bad actors hitting the **-20 Pi** trust floor.
+* **Poverty Observation:** A 7-day immutable monitoring window for status verification.
 
 ---
 

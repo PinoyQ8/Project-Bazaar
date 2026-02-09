@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "start": "concurrently \"node server.js\" \"ngrok http 3000\""
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

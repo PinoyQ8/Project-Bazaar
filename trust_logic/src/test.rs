@@ -50,9 +50,10 @@ mod test {
 
         client.init(&admin);
 
-        client.add_trust(&user); // Score = 1
-        client.decay(&user);     // Score = 0
-        assert_eq!(client.get_trust(&user), 0);
+        client.stake(&user, &None); // Score = 10
+        client.add_trust(&user);    // Score = 11
+        client.decay(&user);        // Score = 8
+        assert_eq!(client.get_trust(&user), 8);
     }
 
     #[test]
@@ -114,6 +115,10 @@ mod test {
         let voucher = Address::random(&env);
         let target = Address::random(&env);
 
+        // Setup: Voucher and Target must exist
+        client.stake(&voucher, &None);
+        client.stake(&target, &None);
+
         client.vouch(&voucher, &target);
         assert_eq!(client.get_balance(&voucher), 5);
     }
@@ -126,6 +131,11 @@ mod test {
         let user1 = Address::random(&env);
         let user2 = Address::random(&env);
         let target = Address::random(&env);
+
+        // Setup
+        client.stake(&user1, &None);
+        client.stake(&user2, &None); // Receiver must exist
+        client.stake(&target, &None);
 
         client.vouch(&user1, &target); // user1 gets 5
         client.vouch(&user1, &target); // user1 gets 5 (total 10)
@@ -144,6 +154,9 @@ mod test {
         let user = Address::random(&env);
         let target = Address::random(&env);
 
+        client.stake(&user, &None);
+        client.stake(&target, &None);
+
         for _ in 0..10 { client.vouch(&user, &target); } // Earn 50 BZR
         
         let badge = symbol_short!("verified");
@@ -160,6 +173,9 @@ mod test {
         let client = create_contract(&env);
         let user = Address::random(&env);
         let target = Address::random(&env);
+
+        client.stake(&user, &None);
+        client.stake(&target, &None);
 
         // Earn BZR
         for _ in 0..4 { client.vouch(&user, &target); } // 20 BZR
@@ -191,6 +207,9 @@ mod test {
         let user = Address::random(&env);
         let target = Address::random(&env);
 
+        client.stake(&user, &None);
+        client.stake(&target, &None);
+
         // Earn 10 BZR
         client.vouch(&user, &target); 
         client.vouch(&user, &target);
@@ -206,6 +225,9 @@ mod test {
         let client = create_contract(&env);
         let user = Address::random(&env);
         let target = Address::random(&env);
+
+        client.stake(&user, &None);
+        client.stake(&target, &None);
 
         // Earn BZR (Need 100)
         for _ in 0..20 { client.vouch(&user, &target); } 
@@ -223,6 +245,8 @@ mod test {
         let accuser = Address::random(&env);
         let target = Address::random(&env);
 
+        client.stake(&target, &None); // Target must exist
+
         assert_eq!(client.is_disputed(&target), false);
         client.raise_dispute(&accuser, &target);
         assert_eq!(client.is_disputed(&target), true);
@@ -238,6 +262,8 @@ mod test {
         let target = Address::random(&env);
 
         client.init(&admin);
+        client.stake(&target, &None); // Target must exist
+
         client.raise_dispute(&accuser, &target);
         assert_eq!(client.is_disputed(&target), true);
 
@@ -294,6 +320,8 @@ mod test {
         let user1 = Address::random(&env);
         let user2 = Address::random(&env);
 
+        client.stake(&user2, &None); // Receiver must exist
+
         client.send_message(&user1, &user2, &soroban_sdk::String::from_str(&env, "Hello!"));
         let msgs = client.get_messages(&user2);
         assert_eq!(msgs.len(), 1);
@@ -308,6 +336,10 @@ mod test {
         let buyer = Address::random(&env);
         let seller = Address::random(&env);
         let target = Address::random(&env);
+
+        client.stake(&buyer, &None);
+        client.stake(&seller, &None); // Seller must exist to receive funds
+        client.stake(&target, &None);
 
         for _ in 0..20 { client.vouch(&buyer, &target); } // Fund buyer with 100 BZR
 
@@ -326,6 +358,9 @@ mod test {
         let user = Address::random(&env);
         let target = Address::random(&env);
 
+        client.stake(&user, &None);
+        client.stake(&target, &None);
+
         for _ in 0..10 { client.vouch(&user, &target); } // 50 BZR
         
         assert_eq!(client.is_subscribed(&user), false);
@@ -342,6 +377,9 @@ mod test {
         let user1 = Address::random(&env);
         let user2 = Address::random(&env);
         let target = Address::random(&env);
+
+        client.stake(&user1, &None);
+        client.stake(&target, &None);
 
         for _ in 0..20 { client.vouch(&user1, &target); } // 100 BZR
 
@@ -369,6 +407,10 @@ mod test {
 
         client.init(&admin);
 
+        client.stake(&user1, &None);
+        client.stake(&user2, &None);
+        client.stake(&target, &None);
+
         // Fund users
         for _ in 0..4 { client.vouch(&user1, &target); } // 20 BZR
         for _ in 0..4 { client.vouch(&user2, &target); } // 20 BZR
@@ -387,5 +429,48 @@ mod test {
         
         assert!( (bal1 == 30 && bal2 == 10) || (bal1 == 10 && bal2 == 30) );
         assert_eq!(client.get_lottery_info(), 0);
+    }
+
+    #[test]
+    fn test_poverty_observation_window() {
+        let mut po = PovertyObservation {
+            start_time: 0,
+            is_active: false,
+        };
+
+        let current_time = 1000;
+        po.start_observation(current_time);
+        
+        // Check before 7 days (604800 seconds)
+        assert_eq!(po.verify_window(current_time + 604799), false);
+        assert_eq!(po.is_active, true);
+
+        // Check after 7 days
+        assert_eq!(po.verify_window(current_time + 604800), true);
+        assert_eq!(po.is_active, false);
+    }
+
+    #[test]
+    fn test_poverty_observation_enforcement() {
+        let env = Env::default();
+        env.mock_all_auths();
+        
+        let client = create_contract(&env);
+        let user = Address::random(&env);
+
+        // Set initial time
+        env.ledger().with_mut(|li| { li.timestamp = 1000; });
+
+        // Stake bond (starts 7-day timer)
+        client.stake(&user, &None);
+
+        // Attempt verification immediately (Should Fail)
+        assert_eq!(client.verify_status(&user), false);
+
+        // Warp time forward 7 days (604800 seconds) + 1 second
+        env.ledger().with_mut(|li| { li.timestamp = 1000 + 604800 + 1; });
+
+        // Attempt verification again (Should Pass)
+        assert_eq!(client.verify_status(&user), true);
     }
 }
