@@ -1,0 +1,22 @@
+# --- BAZAAR TECH SHIELD ---
+
+# Rust / Cargo
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Smart Contract Artifacts
+*.wasm
+.stellar/
+/bin/
+
+# Environment & Secrets (CRITICAL)
+.env
+*.key
+*.pem
+auth.json
+
+# IDE & OS
+.vscode/
+.DS_Store
+Thumbs.db

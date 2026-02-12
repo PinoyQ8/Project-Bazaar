@@ -1,0 +1,17 @@
+[package]
+name = "project-bazaar"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"] # Critical for Wasm
+path = "src/lib.rs"
+
+[dependencies]
+soroban-sdk = "25.1.0"
+
+[profile.release]
+opt-level = "z"     # Optimize for size
+overflow-checks = true
+debug = false
+panic = "abort"    # Contracts must abort on panic
