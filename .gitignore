@@ -8,3 +8,25 @@ Cargo.lock
 Cargo.toml
 MVP_Alpha/
 .next/ 
+# === BAZAAR SECURITY SHIELD ===
+
+# 1. Private Keys & Credentials
+validation-key.txt
+*.key
+*.pem
+.env
+.env.local
+
+# 2. Workstation Scripts (The Toolbox)
+*.bat
+*.ps1
+Scan_Logs/
+backup/
+
+# 3. System Noise
+node_modules/
+.DS_Store
+Thumbs.db
+dist/
+build/
+.next/
